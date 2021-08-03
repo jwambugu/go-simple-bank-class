@@ -28,6 +28,8 @@ type TransferTxResult struct {
 	ToEntry     Entry    `json:"to_entry"`
 }
 
+var txKey = struct{}{}
+
 // NewStore creates a new store
 func NewStore(db *sql.DB) *Store {
 	return &Store{
@@ -96,7 +98,26 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 			return err
 		}
 
-		// TODO: update accounts' balance
+		// Update the sender's account balance
+		result.FromAccount, err = q.AddAccountBalance(context.Background(), AddAccountBalanceParams{
+			Amount: -arg.Amount,
+			ID:     int32(arg.FromAccountID),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		// Update the receiver's account balance
+		result.ToAccount, err = q.AddAccountBalance(context.Background(), AddAccountBalanceParams{
+			Amount: arg.Amount,
+			ID:     int32(arg.ToAccountID),
+		})
+
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 
