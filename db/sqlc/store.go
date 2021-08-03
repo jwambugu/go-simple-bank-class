@@ -28,6 +28,8 @@ type TransferTxResult struct {
 	ToEntry     Entry    `json:"to_entry"`
 }
 
+var txKey = struct{}{}
+
 // NewStore creates a new store
 func NewStore(db *sql.DB) *Store {
 	return &Store{
@@ -96,32 +98,20 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 			return err
 		}
 
-		// Get the sender's account then update balance
-		fromAccount, err := q.GetAccount(context.Background(), int32(arg.FromAccountID))
-
-		if err != nil {
-			return err
-		}
-
-		result.FromAccount, err = q.UpdateAccount(context.Background(), UpdateAccountParams{
-			ID:      int32(arg.FromAccountID),
-			Balance: fromAccount.Balance - arg.Amount,
+		// Update the sender's account balance
+		result.FromAccount, err = q.AddAccountBalance(context.Background(), AddAccountBalanceParams{
+			Amount: -arg.Amount,
+			ID:     int32(arg.FromAccountID),
 		})
 
 		if err != nil {
 			return err
 		}
 
-		// Get the receiver's account then update balance
-		toAccount, err := q.GetAccount(context.Background(), int32(arg.ToAccountID))
-
-		if err != nil {
-			return err
-		}
-
-		result.ToAccount, err = q.UpdateAccount(context.Background(), UpdateAccountParams{
-			ID:      int32(arg.ToAccountID),
-			Balance: toAccount.Balance + arg.Amount,
+		// Update the receiver's account balance
+		result.ToAccount, err = q.AddAccountBalance(context.Background(), AddAccountBalanceParams{
+			Amount: arg.Amount,
+			ID:     int32(arg.ToAccountID),
 		})
 
 		if err != nil {

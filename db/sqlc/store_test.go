@@ -23,8 +23,10 @@ func TestStore_TransferTx(t *testing.T) {
 	resultChan := make(chan TransferTxResult)
 
 	for i := 0; i < n; i++ {
+		txName := fmt.Sprintf("tx %d", i+1)
+
 		go func() {
-			ctx := context.Background()
+			ctx := context.WithValue(context.Background(), txKey, txName)
 
 			result, err := store.TransferTx(ctx, TransferTxParams{
 				FromAccountID: int64(accountOne.ID),
