@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -12,10 +13,9 @@ func TestStore_TransferTx(t *testing.T) {
 	accountOne := createRandomAccount(t)
 	accountTwo := createRandomAccount(t)
 
-	// Cast the ids
-	//accountOne.ID = int32(accountOne.ID)
+	fmt.Println(">> before tx:", accountOne.Balance, accountTwo.Balance)
 
-	// run n concurrent transfer transaction
+	// run n concurrent transfer transactions
 	n := 5
 	amount := int64(10)
 
@@ -36,6 +36,8 @@ func TestStore_TransferTx(t *testing.T) {
 			resultChan <- result
 		}()
 	}
+
+	transactionExists := make(map[int]bool)
 
 	for i := 0; i < n; i++ {
 		err := <-errsChan
@@ -81,6 +83,44 @@ func TestStore_TransferTx(t *testing.T) {
 		_, err = store.GetEntry(context.Background(), toEntry.ID)
 		require.NoError(t, err)
 
-		// TODO: check account balance
+		// Check the sender account
+		fromAccount := result.FromAccount
+		require.NotEmpty(t, fromAccount)
+		require.Equal(t, accountOne.ID, fromAccount.ID)
+
+		// Check the receiver account
+		toAccount := result.ToAccount
+		require.NotEmpty(t, toAccount)
+		require.Equal(t, accountTwo.ID, toAccount.ID)
+
+		// Check account balance
+		fmt.Println(">> tx:", fromAccount.Balance, toAccount.Balance)
+
+		accountOneBalance := accountOne.Balance - fromAccount.Balance
+		accountTwoBalance := toAccount.Balance - accountTwo.Balance
+
+		require.Equal(t, accountOneBalance, accountTwoBalance)
+		require.True(t, accountOneBalance > 0)
+		require.True(t, accountOneBalance%amount == 0) // 1 * amount, 2 * amount, 3 * amount, ..., n * amount
+
+		k := int(accountOneBalance / amount)
+		require.True(t, k >= 1 && k <= n)
+		require.NotContains(t, transactionExists, k)
+		transactionExists[k] = true
 	}
+
+	// Check for the final updated balances
+	updatedAccountOne, err := testQueries.GetAccount(context.Background(), accountOne.ID)
+	require.NoError(t, err)
+
+	updatedAccountTwo, err := testQueries.GetAccount(context.Background(), accountTwo.ID)
+	require.NoError(t, err)
+
+	fmt.Println(">> after tx:", updatedAccountOne.Balance, updatedAccountTwo.Balance)
+
+	// The new account one balance will reduce by n * amount
+	require.Equal(t, accountOne.Balance-int64(n)*amount, updatedAccountOne.Balance)
+
+	// The new account two balance will increase by n * amount
+	require.Equal(t, accountTwo.Balance+int64(n)*amount, updatedAccountTwo.Balance)
 }
