@@ -59,6 +59,26 @@ func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 	return tx.Commit()
 }
 
+func addMoney(ctx context.Context, q *Queries, fromAccountID, fromAmount, toAccountID, toAmount int64) (
+	from, to Account, err error) {
+
+	from, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+		ID:     int32(fromAccountID),
+		Amount: fromAmount,
+	})
+
+	if err != nil {
+		return
+	}
+
+	to, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+		ID:     int32(toAccountID),
+		Amount: toAmount,
+	})
+
+	return
+}
+
 // TransferTx performs a money transfer from one account to the other.
 // It creates the transfer, add account entries, and update accounts' balance within a database transaction
 func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
@@ -98,24 +118,14 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 			return err
 		}
 
-		// Update the sender's account balance
-		result.FromAccount, err = q.AddAccountBalance(context.Background(), AddAccountBalanceParams{
-			Amount: -arg.Amount,
-			ID:     int32(arg.FromAccountID),
-		})
-
-		if err != nil {
-			return err
-		}
-
-		// Update the receiver's account balance
-		result.ToAccount, err = q.AddAccountBalance(context.Background(), AddAccountBalanceParams{
-			Amount: arg.Amount,
-			ID:     int32(arg.ToAccountID),
-		})
-
-		if err != nil {
-			return err
+		if arg.FromAccountID < arg.ToAccountID {
+			// Update the sender's account balance first
+			result.FromAccount, result.ToAccount, err = addMoney(context.Background(), q, arg.FromAccountID, -arg.Amount,
+				arg.ToAccountID, arg.Amount)
+		} else {
+			// Update the receiver's account balance first
+			result.ToAccount, result.FromAccount, err = addMoney(context.Background(), q, arg.ToAccountID, arg.Amount,
+				arg.FromAccountID, -arg.Amount)
 		}
 
 		return nil
