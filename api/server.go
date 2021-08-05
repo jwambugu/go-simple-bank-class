@@ -31,12 +31,15 @@ func NewServer(store db.Store) *Server {
 	v1 := router.Group("/v1")
 	accounts := v1.Group("/accounts")
 	transfers := v1.Group("/transfers")
+	users := v1.Group("/users")
 
 	accounts.GET("", server.getAccounts)
 	accounts.POST("", server.createAccount)
 	accounts.GET(":id", server.getAccountByID)
 
 	transfers.POST("", server.createTransfer)
+
+	users.POST("", server.createUser)
 
 	server.router = router
 	return server
