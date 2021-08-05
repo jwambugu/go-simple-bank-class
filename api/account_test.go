@@ -182,7 +182,6 @@ func TestCreatAccountAPI(t *testing.T) {
 		{
 			name: "InvalidCurrency",
 			body: gin.H{
-				"owner":    account.Owner,
 				"currency": "KES",
 			},
 			buildStubs: func(store *mockdb.MockStore) {
