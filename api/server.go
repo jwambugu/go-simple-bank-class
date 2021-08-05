@@ -2,7 +2,10 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	db "github.com/jwambugu/go-simple-bank-class/db/sqlc"
+	"log"
 )
 
 // Server serves all HTTP requests for the banking service
@@ -19,11 +22,21 @@ func NewServer(store db.Store) *Server {
 
 	router := gin.Default()
 
-	v1 := router.Group("/v1")
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		if err := v.RegisterValidation("currency", validCurrency); err != nil {
+			log.Fatalf("failed to register the currency validator: %v", err)
+		}
+	}
 
-	v1.POST("/accounts", server.createAccount)
-	v1.GET("/accounts", server.getAccounts)
-	v1.GET("/accounts/:id", server.getAccountByID)
+	v1 := router.Group("/v1")
+	accounts := v1.Group("/accounts")
+	transfers := v1.Group("/transfers")
+
+	accounts.POST("/", server.createAccount)
+	accounts.GET("/", server.getAccounts)
+	accounts.GET("/:id", server.getAccountByID)
+
+	transfers.POST("/", server.createTransfer)
 
 	server.router = router
 	return server
