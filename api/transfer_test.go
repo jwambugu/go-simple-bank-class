@@ -198,7 +198,7 @@ func TestCreateTransfer(t *testing.T) {
 
 			testCase.buildStubs(store)
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			url := "/v1/transfers"
