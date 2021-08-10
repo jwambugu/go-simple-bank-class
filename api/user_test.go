@@ -88,7 +88,7 @@ func TestCreateUser(t *testing.T) {
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name: "creates user successfully",
+			name: "CreatesUserSuccessfully",
 			body: gin.H{
 				"username":  user.Username,
 				"full_name": user.FullName,
@@ -112,7 +112,7 @@ func TestCreateUser(t *testing.T) {
 			},
 		},
 		{
-			name: "internal server error occurs when creating user",
+			name: "InternalServerErrorOccursWhenCreatingUser",
 			body: gin.H{
 				"username":  user.Username,
 				"full_name": user.FullName,
@@ -127,7 +127,7 @@ func TestCreateUser(t *testing.T) {
 			},
 		},
 		{
-			name: "username or email already exists",
+			name: "UsernameOrEmailAlreadyExists",
 			body: gin.H{
 				"username":  user.Username,
 				"full_name": user.FullName,
@@ -143,7 +143,7 @@ func TestCreateUser(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid username",
+			name: "InvalidUsername",
 			body: gin.H{
 				"username":  "jwambugu#!",
 				"full_name": user.FullName,
@@ -158,7 +158,7 @@ func TestCreateUser(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid email address",
+			name: "InvalidEmailAddress",
 			body: gin.H{
 				"username":  user.Username,
 				"full_name": user.FullName,
@@ -173,7 +173,7 @@ func TestCreateUser(t *testing.T) {
 			},
 		},
 		{
-			name: "password too short",
+			name: "PasswordTooShort",
 			body: gin.H{
 				"username":  user.Username,
 				"full_name": user.FullName,
