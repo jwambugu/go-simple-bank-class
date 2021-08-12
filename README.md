@@ -1,7 +1,7 @@
 # Simple Bank
 
 This is a simple bank application created using golang. The main objective was to learn more about testing, handling DB
-transactions and docker.
+transactions, docker and using GitHub actions.
 
 ## Requirements
 
