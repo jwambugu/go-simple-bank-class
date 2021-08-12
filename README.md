@@ -28,7 +28,7 @@ Run the docker container
   make postgres
 ```
 
-Run the migrations
+Run the database migrations
 
 ```bash
   make migrateup
