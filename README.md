@@ -25,13 +25,13 @@ Go to the project directory
 Run the docker container
 
 ```bash
-    make postgres
+  make postgres
 ```
 
 Run the migrations
 
 ```bash
-    make migrateup
+  make migrateup
 ```
 
 Start the server
